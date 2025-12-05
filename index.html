@@ -34,7 +34,7 @@
     }
 
     main{
-        max-width:1400px;
+        max-width:1100px; /* <- APERTEI O PAINEL (era 1400px) */
         margin:24px auto 64px auto;
         padding:0 16px;
         display:flex;
@@ -123,7 +123,7 @@
     }
     #grafico{
         width:100%;
-        min-height:480px;
+        min-height:440px;
     }
 
     /* painel governos lateral */
@@ -631,17 +631,22 @@ function atualizarTudo(){
         }
     }
 
-    // Eixo X em datas reais
     const xDates  = base.map(row => row.dataDate);
-    const xLabels = base.map(row => periodoLabel(row)); // só pra conferência se quiser
-
-    const yVals = base.map(row => row.valor).filter(v=>!isNaN(v));
+    const yVals   = base.map(row => row.valor).filter(v=>!isNaN(v));
 
     let mediaVal = null;
     let tendenciaVals = [];
     if(yVals.length>0){
         mediaVal = yVals.reduce((a,b)=>a+b,0)/yVals.length;
         tendenciaVals = calcTendencia(yVals);
+    }
+
+    // range do eixo X bem ajustado ao primeiro/último ano da série filtrada
+    let xRange = null;
+    if(base.length){
+        const firstYear = base[0].dataDate.getFullYear();
+        const lastYear  = base[base.length-1].dataDate.getFullYear();
+        xRange = [new Date(firstYear,0,1), new Date(lastYear,11,31)];
     }
 
     const shapes = [];
@@ -697,14 +702,15 @@ function atualizarTudo(){
             title:'Ano',
             type:'date',
             tickformat:'%Y',
-            dtick:'M12'
+            dtick:'M12',
+            range: xRange   // <- RANGE FIXO DO PRIMEIRO AO ÚLTIMO ANO
         },
         yaxis:{
             title:'Valor'
         },
         shapes:shapes,
-        height:500,
-        margin:{l:60,r:20,t:90,b:90},
+        height:440,
+        margin:{l:60,r:20,t:90,b:80},
         legend:{orientation:'v'}
     }, {
         displaylogo:false,
