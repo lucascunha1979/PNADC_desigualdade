@@ -34,7 +34,7 @@
     }
 
     main{
-        max-width:1100px; /* <- APERTEI O PAINEL (era 1400px) */
+        max-width:1100px; /* painel mais “apertado” */
         margin:24px auto 64px auto;
         padding:0 16px;
         display:flex;
@@ -424,10 +424,40 @@ function periodoLabel(item){
     return item.dataLabel;
 }
 
-function quebrarTitulo(abrangencia, variavel){
-    const base = `${abrangencia}: ${variavel}`;
-    return base.replace(": ", ":<br>");
+// --- NOVO: quebra de título em várias linhas ---
+function wrapTitulo(texto, maxLen){
+    const palavras = texto.split(" ");
+    let linha = "";
+    let partes = [];
+
+    palavras.forEach(p => {
+        const tentativa = (linha + " " + p).trim();
+        if(tentativa.length > maxLen){
+            if(linha.length > 0){
+                partes.push(linha.trim());
+                linha = p;
+            } else {
+                partes.push(p);
+                linha = "";
+            }
+        } else {
+            linha = tentativa;
+        }
+    });
+
+    if(linha.length > 0){
+        partes.push(linha.trim());
+    }
+
+    return partes.join("<br>");
 }
+
+function quebrarTitulo(abrangencia, variavel){
+    const prefixo = `${abrangencia}: `;
+    const variavelQuebrada = wrapTitulo(variavel, 55); // ajuste 55 se quiser mais/menos quebra
+    return prefixo + variavelQuebrada;
+}
+// -----------------------------------------------
 
 // tendência linear simples (OLS)
 function calcTendencia(y){
@@ -512,12 +542,11 @@ Papa.parse("indic_desigual.csv", {
                 "Nenhuma linha válida foi encontrada.\n\n" +
                 "Verifique se a coluna 'ano' está no formato 2012, 2013 etc. e se os valores numéricos estão corretos."
             );
-            return;
+        } else {
+            popularVariaveis();
+            montarPainelGovernos(); // esqueleto
+            atualizarTudo();
         }
-
-        popularVariaveis();
-        montarPainelGovernos(); // esqueleto
-        atualizarTudo();
     }
 });
 
@@ -641,7 +670,6 @@ function atualizarTudo(){
         tendenciaVals = calcTendencia(yVals);
     }
 
-    // range do eixo X bem ajustado ao primeiro/último ano da série filtrada
     let xRange = null;
     if(base.length){
         const firstYear = base[0].dataDate.getFullYear();
@@ -703,7 +731,7 @@ function atualizarTudo(){
             type:'date',
             tickformat:'%Y',
             dtick:'M12',
-            range: xRange   // <- RANGE FIXO DO PRIMEIRO AO ÚLTIMO ANO
+            range: xRange
         },
         yaxis:{
             title:'Valor'
